@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="50%" stop-color="#0f0c29"/>
+      <stop offset="100%" stop-color="#302b63"/>
+    </linearGradient>
+    <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#6C63FF"/>
+      <stop offset="100%" stop-color="#FF6584"/>
+    </linearGradient>
+    <linearGradient id="cardAccent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#6C63FF"/>
+      <stop offset="100%" stop-color="#FF6584"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="8" stdDeviation="24" flood-color="#6C63FF" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- background -->
+  <rect width="1200" height="630" fill="url(#bg)" rx="20"/>
+
+  <!-- floating globe -->
+  <text x="600" y="105" font-size="60" text-anchor="middle" filter="url(#glow)">🗺️</text>
+
+  <!-- title -->
+  <text x="600" y="180" font-family="Poppins, system-ui, sans-serif" font-size="56" font-weight="900" fill="url(#titleGrad)" text-anchor="middle" letter-spacing="-0.5">GeoAprende Córdoba</text>
+
+  <!-- subtitle -->
+  <text x="600" y="220" font-family="Poppins, system-ui, sans-serif" font-size="18" fill="#a0aec0" text-anchor="middle">Aprendé los departamentos y ciudades cabecera de Argentina</text>
+
+  <!-- mode cards -->
+  <g filter="url(#shadow)">
+    <!-- card 1 -->
+    <rect x="180" y="270" width="380" height="300" rx="20" fill="#16213e" stroke="transparent"/>
+    <rect x="180" y="270" width="380" height="4" rx="2" fill="url(#cardAccent)"/>
+    <text x="370" y="340" font-family="system-ui, sans-serif" font-size="50" text-anchor="middle">📍</text>
+    <text x="370" y="395" font-family="Poppins, system-ui, sans-serif" font-size="22" font-weight="700" fill="#fff" text-anchor="middle">Ubicá el Departamento</text>
+    <text x="370" y="425" font-family="system-ui, sans-serif" font-size="15" fill="#a0aec0" text-anchor="middle">Se te nombre un departamento</text>
+    <text x="370" y="448" font-family="system-ui, sans-serif" font-size="15" fill="#a0aec0" text-anchor="middle">y deberás encontrarlo en el mapa.</text>
+    <line x1="220" y1="475" x2="520" y2="475" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="220" y="505" font-family="system-ui, sans-serif" font-size="13" fill="#a0aec0">Mejor actuación</text>
+    <text x="520" y="505" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#FFD700" text-anchor="end">👑 Leyenda</text>
+    <text x="220" y="530" font-family="system-ui, sans-serif" font-size="13" fill="#a0aec0">Última partida</text>
+    <text x="520" y="530" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#FFD700" text-anchor="end">26 pts</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <!-- card 2 -->
+    <rect x="640" y="270" width="380" height="300" rx="20" fill="#16213e" stroke="transparent"/>
+    <rect x="640" y="270" width="380" height="4" rx="2" fill="url(#cardAccent)"/>
+    <text x="830" y="340" font-family="system-ui, sans-serif" font-size="50" text-anchor="middle">🏙️</text>
+    <text x="830" y="395" font-family="Poppins, system-ui, sans-serif" font-size="22" font-weight="700" fill="#fff" text-anchor="middle">¿Cuál es la Cabecera?</text>
+    <text x="830" y="425" font-family="system-ui, sans-serif" font-size="15" fill="#a0aec0" text-anchor="middle">Se te muestra un departamento</text>
+    <text x="830" y="448" font-family="system-ui, sans-serif" font-size="15" fill="#a0aec0" text-anchor="middle">y deberás elegir su ciudad cabecera.</text>
+    <line x1="680" y1="475" x2="980" y2="475" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <text x="680" y="505" font-family="system-ui, sans-serif" font-size="13" fill="#a0aec0">Mejor actuación</text>
+    <text x="980" y="505" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#FFD700" text-anchor="end">⭐ Excelente</text>
+    <text x="680" y="530" font-family="system-ui, sans-serif" font-size="13" fill="#a0aec0">Última partida</text>
+    <text x="980" y="530" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#FFD700" text-anchor="end">18 pts</text>
+  </g>
+</svg>

@@ -21,7 +21,7 @@ El objetivo es que los chicos aprendan de forma interactiva y divertida la divis
 
 - React 19
 - Vite
-- Leaflet / OpenStreetMap
+- SVG interactivo con datos departamentales
 
 ## 🚀 Desarrollo
 
