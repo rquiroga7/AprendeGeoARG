@@ -1,16 +1,54 @@
-# React + Vite
+# GeoAprende 🗺️
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Juego educativo diseñado para que estudiantes de primaria aprendan los **departamentos** y sus **ciudades cabecera** de la República Argentina.
 
-Currently, two official plugins are available:
+## 🎯 Objetivo
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+El objetivo es que los chicos aprendan de forma interactiva y divertida la división política de las provincias argentinas: ubicación geográfica de cada departamento, su nombre y su ciudad cabecera.
 
-## React Compiler
+## 🕹️ Cómo se juega
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Se muestra un mapa departamental de una provincia Argentina.
+- El juego propone distintos desafíos: encontrar un departamento, identificar su cabecera, etc.
+- El estudiante interactúa haciendo clic en el mapa para responder.
 
-## Expanding the ESLint configuration
+## 🚧 Estado del proyecto
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **Actualmente**: solo está disponible la provincia de **Córdoba** con todos sus departamentos y ciudades cabeceras.
+- **Próximamente**: se agregarán todas las provincias argentinas.
+
+## 🛠️ Tecnologías
+
+- React 19
+- Vite
+- Leaflet / OpenStreetMap
+
+## 🚀 Desarrollo
+
+```bash
+npm install
+npm run dev
+```
+
+## 📦 Build y despliegue
+
+```bash
+npm run build
+npm run preview   # previsualizar el build localmente
+```
+
+El proyecto está configurado para ser hosteado en **GitHub Pages**. El build genera los archivos estáticos en la carpeta `dist/`.
+
+### Deploy manual
+
+```bash
+npm run deploy
+```
+
+### Deploy con GitHub Actions
+
+El proyecto también puede desplegarse automáticamente con GitHub Actions. Ver [la documentación oficial](https://vite.dev/guide/static-deploy.html#github-pages).
+
+---
+
+Hecho con ❤️ para que aprender geografía sea más divertido. Por Rodrigo Quiroga ([@rquiroga777](https://x.com/rquiroga777) en Twitter/X).
