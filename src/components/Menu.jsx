@@ -76,7 +76,7 @@ function Menu({ onSelectMode }) {
         <div className="mode-card" onClick={() => onSelectMode('map', selectedProvince)}>
           <div className="icon">📍</div>
           <h3>Ubicá {selectedProvince === 'argentina' ? 'la' : 'el'} {getDeptTerm(selectedProvince, false, true)}</h3>
-          <p>Se te nombra {selectedProvince === 'argentina' ? 'una' : 'un'} {getDeptTerm(selectedProvince)} y deberás encontrarla{selectedProvince === 'argentina' ? '' : 'o'} en el mapa.</p>
+          <p>Se te nombra {selectedProvince === 'argentina' ? 'una' : 'un'} {getDeptTerm(selectedProvince)} y deberás encontrarl{selectedProvince === 'argentina' ? 'a' : 'o'} en el mapa.</p>
           {provStats.best > 0 && (
             <div className="mode-stats">
               <div className="mode-stat">
