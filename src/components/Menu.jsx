@@ -51,7 +51,7 @@ function Menu({ onSelectMode }) {
         <span style={{ color: '#FFFFFF', WebkitTextFillColor: '#FFFFFF', WebkitTextStroke: '0.5px rgba(255,255,255,0.5)' }}>o</span>
         <span style={{ color: '#4FC3F7', WebkitTextFillColor: '#4FC3F7', WebkitTextStroke: '0.5px rgba(255,255,255,0.5)' }}>ARG</span>
       </h1>
-      <p className="menu-subtitle">Aprendé los departamentos y cabeceras de todas las provincias argentinas</p>
+      <p className="menu-subtitle">Aprendé los departamentos, provincias, cabeceras y capitales de toda la Argentina</p>
 
       <div className="menu-province-selector">
         <label htmlFor="province-select">Provincia:</label>
