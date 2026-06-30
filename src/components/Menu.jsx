@@ -67,15 +67,16 @@ function Menu({ onSelectMode }) {
       </div>
 
       <p className="menu-levels-info">
-        Cada provincia tiene niveles de dificultad que aumentan la cantidad de {getDeptTerm(selectedProvince, true)}
-        incluidos, ordenados de norte a sur.
+        {selectedProvince === 'argentina'
+          ? 'Cada modo tiene niveles de dificultad que aumentan la cantidad de provincias incluidas, ordenadas de norte a sur.'
+          : `Cada provincia tiene niveles de dificultad que aumentan la cantidad de ${getDeptTerm(selectedProvince, true)} incluidos, ordenados de norte a sur.`}
       </p>
 
       <div className="mode-cards">
         <div className="mode-card" onClick={() => onSelectMode('map', selectedProvince)}>
           <div className="icon">📍</div>
-          <h3>Ubicá el {getDeptTerm(selectedProvince, false, true)}</h3>
-          <p>Se te nombre un {getDeptTerm(selectedProvince)} y deberás encontrarlo en el mapa.</p>
+          <h3>Ubicá {selectedProvince === 'argentina' ? 'la' : 'el'} {getDeptTerm(selectedProvince, false, true)}</h3>
+          <p>Se te nombra {selectedProvince === 'argentina' ? 'una' : 'un'} {getDeptTerm(selectedProvince)} y deberás encontrarla{selectedProvince === 'argentina' ? '' : 'o'} en el mapa.</p>
           {provStats.best > 0 && (
             <div className="mode-stats">
               <div className="mode-stat">
@@ -93,7 +94,7 @@ function Menu({ onSelectMode }) {
         <div className="mode-card" onClick={() => onSelectMode('capital', selectedProvince)}>
           <div className="icon">🏙️</div>
           <h3>¿Cuál es la Cabecera?</h3>
-          <p>Se te muestra un {getDeptTerm(selectedProvince)} y deberás elegir su ciudad cabecera.</p>
+          <p>Se te muestra {selectedProvince === 'argentina' ? 'una' : 'un'} {getDeptTerm(selectedProvince)} y deberás elegir su ciudad cabecera.</p>
           {provCapStats.best > 0 && (
             <div className="mode-stats">
               <div className="mode-stat">
