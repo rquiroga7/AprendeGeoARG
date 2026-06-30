@@ -68,7 +68,7 @@ function Menu({ onSelectMode }) {
 
       <p className="menu-levels-info">
         {selectedProvince === 'argentina'
-          ? 'Cada modo tiene niveles de dificultad que aumentan la cantidad de provincias incluidas, ordenadas de norte a sur.'
+          ? 'El mapa tiene niveles de dificultad que aumentan la cantidad de provincias incluidas, ordenadas de norte a sur.'
           : `Cada provincia tiene niveles de dificultad que aumentan la cantidad de ${getDeptTerm(selectedProvince, true)} incluidos, ordenados de norte a sur.`}
       </p>
 
