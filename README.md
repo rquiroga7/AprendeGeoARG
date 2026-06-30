@@ -6,17 +6,17 @@ Disponible en: https://rquiroga7.github.io/AprendeGeoARG/
 
 ## 🎯 Objetivo
 
-Aprender de forma interactiva y divertida la división política de las provincias argentinas: ubicación geográfica de cada departamento, su nombre y su ciudad cabecera.
+Aprender de forma interactiva y divertida la división política de las provincias argentinas: ubicación geográfica de cada provincia y departamento, su nombre y su ciudad cabecera o ciudad capital.
 
 ## 🕹️ Modos de juego
 
-### 📍 Encontrar departamentos
+### 📍 Encontrar departamentos/provincias
 Se muestra un mapa departamental y un nombre de departamento; hay que hacer clic en la ubicación correcta del mapa.
 
-### 🏙️ Capitales
-Se muestra un departamento destacado en el mapa y hay que elegir su ciudad cabecera entre varias opciones.
+### 🏙️ Ciudades cabecera / Capitales provinciales
+Se muestra un departamento o provincia en el mapa y hay que elegir su ciudad cabecera o capital provincial entre varias opciones.
 
-Ambos modos tienen **niveles progresivos**: cada nivel agrega más departamentos (ordenados de norte a sur) y exige mayor precisión.
+Ambos modos tienen **niveles progresivos**: cada nivel agrega más departamentos/provincias (ordenados de norte a sur) y exige mayor precisión.
 
 ## 🏆 Sistema de puntuación
 
@@ -96,7 +96,7 @@ Esto genera los archivos en `src/data/provinces/` (un JSON por provincia) y el �
 - Proyección de coordenadas geográficas a SVG con preservación de aspecto.
 - Recorte de latitudes antárticas para Tierra del Fuego.
 - Extracción automática de las Islas Malvinas desde el dataset de Atlántico Sur.
-- Cálculo de viewBox por departamento insular para las ventanas PIP.
+- Cálculo de viewBox por departamento insular para las ventanas PIP (picture in picture).
 
 ## 👩‍🏫 Créditos
 
