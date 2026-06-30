@@ -1,6 +1,6 @@
 # AprendeGeoARG 🗺️
 
-Juego educativo para aprender los **departamentos** y **ciudades cabecera** de todas las **24 provincias** de la República Argentina.
+Juego educativo para aprender las **provincias** y **capitales provinciales**, así como los **departamentos** y **ciudades cabecera** de las **23 provincias** de la República Argentina.
 
 Disponible en: https://rquiroga7.github.io/AprendeGeoARG/
 
