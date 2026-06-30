@@ -45,11 +45,11 @@ function Menu({ onSelectMode }) {
     <div className="menu">
       <div className="menu-logo">🗺️</div>
       <h1 className="menu-title">
-        <span style={{ color: '#4FC3F7', WebkitTextFillColor: '#4FC3F7' }}>Aprende</span>
-        <span style={{ color: '#FFFFFF', WebkitTextFillColor: '#FFFFFF' }}>G</span>
-        <span style={{ color: '#FFD700', WebkitTextFillColor: '#FFD700' }}>e</span>
-        <span style={{ color: '#FFFFFF', WebkitTextFillColor: '#FFFFFF' }}>o</span>
-        <span style={{ color: '#4FC3F7', WebkitTextFillColor: '#4FC3F7' }}>ARG</span>
+        <span style={{ color: '#4FC3F7', WebkitTextFillColor: '#4FC3F7', WebkitTextStroke: '0.5px rgba(255,255,255,0.5)' }}>Aprende</span>
+        <span style={{ color: '#FFFFFF', WebkitTextFillColor: '#FFFFFF', WebkitTextStroke: '0.5px rgba(255,255,255,0.5)' }}>G</span>
+        <span style={{ color: '#FFD700', WebkitTextFillColor: '#FFD700', WebkitTextStroke: '0.5px rgba(255,255,255,0.5)' }}>e</span>
+        <span style={{ color: '#FFFFFF', WebkitTextFillColor: '#FFFFFF', WebkitTextStroke: '0.5px rgba(255,255,255,0.5)' }}>o</span>
+        <span style={{ color: '#4FC3F7', WebkitTextFillColor: '#4FC3F7', WebkitTextStroke: '0.5px rgba(255,255,255,0.5)' }}>ARG</span>
       </h1>
       <p className="menu-subtitle">Aprendé los departamentos y cabeceras de todas las provincias argentinas</p>
 
