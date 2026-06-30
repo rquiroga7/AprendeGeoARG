@@ -172,7 +172,8 @@ function CapitalGame({ provinceKey, onBack, onRoundEnd }) {
 
   const finishRound = (correct) => {
     const total = roundDepts.length
-    const maxScore = total * 10
+    const levelMaxScore = total * 10
+    const totalMaxScore = provinceData.departments.length * 10
     const score = trophiesRef.current
     const currentLevel = streakRef.current + 1
     const maxLevelIdx = levelSizes.length - 1
@@ -181,20 +182,20 @@ function CapitalGame({ provinceKey, onBack, onRoundEnd }) {
     previousStreakRef.current = streakRef.current
 
     let levelResult = 'fail'
-    if (score >= maxScore * 0.8) {
+    if (score >= levelMaxScore * 0.8) {
       levelResult = 'pass'
       if (!isMaxLevel) {
         streakRef.current = streakRef.current + 1
       }
       fireworks.launchLoop()
       sound.playVictory()
-    } else if (score >= maxScore * 0.5) {
+    } else if (score >= levelMaxScore * 0.5) {
       levelResult = 'good'
     }
 
     setLevelIndex(streakRef.current)
-    onRoundEnd('capital', score, maxScore)
-    setResultData({ correct, total, maxScore, score, currentLevel, levelResult, isMaxLevel })
+    onRoundEnd('capital', score, totalMaxScore)
+    setResultData({ correct, total, maxScore: totalMaxScore, levelMaxScore, score, currentLevel, levelResult, isMaxLevel })
     setShowResult(true)
   }
 
@@ -246,7 +247,7 @@ function CapitalGame({ provinceKey, onBack, onRoundEnd }) {
           <div className="round-badge">🎯 {roundDepts.length} {getDeptTerm(provinceKey, true)}</div>
           <div className="game-stat">
             <span className="label">Pregunta</span>
-            <span className="value">{currentIndex + (showResult ? roundDepts.length : 1)}/{roundDepts.length}</span>
+            <span className="value">{showResult ? roundDepts.length : currentIndex + 1}/{roundDepts.length}</span>
           </div>
           <div className="game-stat">
             <span className="label">Correctas</span>
@@ -375,7 +376,7 @@ function CapitalGame({ provinceKey, onBack, onRoundEnd }) {
                     <p className="level-up-text" style={{ color: '#FF6584' }}>No te preocupes, ¡practicando vas a mejorar!</p>
                   )}
                   <p className="score-text">{Object.values(deptAttempts).filter(v => v === 0).length} de {resultData.total} correctas en el primer intento</p>
-                  <div className="trophies-earned">🏆 {resultData.score} de {resultData.maxScore} puntos posibles</div>
+                  <div className="trophies-earned">🏆 {resultData.score} de {resultData.levelMaxScore} puntos posibles</div>
                   {(() => {
                     const r = getRank(resultData.score, resultData.maxScore)
                     return r ? <p className="rank-text">{r.icon} Rango: {r.name}</p> : null

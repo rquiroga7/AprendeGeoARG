@@ -3,10 +3,11 @@ import provincesList from './provinces.json'
 const cache = {}
 
 export function getProvinces() {
-  return provincesList
+  return [{ key: 'argentina', name: 'ARGENTINA', count: 23 }, ...provincesList]
 }
 
 export function getProvinceName(key) {
+  if (key === 'argentina') return 'ARGENTINA'
   const p = provincesList.find(p => p.key === key)
   return p ? p.name : key
 }
@@ -19,6 +20,11 @@ export async function loadProvinceData(provinceKey) {
 }
 
 export function getDeptTerm(provinceKey, plural = false, capitalize = false) {
+  if (provinceKey === 'argentina') {
+    let term = plural ? 'provincias' : 'provincia'
+    if (capitalize) term = term.charAt(0).toUpperCase() + term.slice(1)
+    return term
+  }
   const isBA = provinceKey === 'buenos_aires'
   let term
   if (plural) term = isBA ? 'partidos' : 'departamentos'

@@ -9,6 +9,8 @@ import os
 import math
 import urllib.request
 import sys
+from shapely.geometry import shape, Polygon, MultiPolygon
+from shapely.ops import unary_union
 
 GEO_BASE = 'https://raw.githubusercontent.com/mgaitan/departamentos_argentina/master'
 
@@ -101,11 +103,12 @@ def project_coords(coords, bounds, padding=40):
         result.append(projected)
     return result, svg_w, svg_h
 
-def ring_to_path(ring):
+def ring_to_path(ring, precision=3):
     parts = []
+    fmt = f'.{precision}f'
     for i, (x, y) in enumerate(ring):
         cmd = 'M' if i == 0 else 'L'
-        parts.append(f'{cmd}{x:.3f},{y:.3f}')
+        parts.append(f'{cmd}{x:{fmt}},{y:{fmt}}')
     if ring:
         parts.append('Z')
     return ''.join(parts)
@@ -416,6 +419,231 @@ def process_province(prov_key, prov_name):
 
     return result
 
+PROVINCE_CAPITALS = {
+    'BUENOS AIRES': 'La Plata',
+    'CATAMARCA': 'San Fernando del Valle de Catamarca',
+    'CHACO': 'Resistencia',
+    'CHUBUT': 'Rawson',
+    'CIUDAD AUTONOMA DE BUENOS AIRES': 'CABA',
+    'CORDOBA': 'Córdoba',
+    'CORRIENTES': 'Corrientes',
+    'ENTRE RIOS': 'Paraná',
+    'FORMOSA': 'Formosa',
+    'JUJUY': 'San Salvador de Jujuy',
+    'LA PAMPA': 'Santa Rosa',
+    'LA RIOJA': 'La Rioja',
+    'MENDOZA': 'Mendoza',
+    'MISIONES': 'Posadas',
+    'NEUQUEN': 'Neuquén',
+    'RIO NEGRO': 'Viedma',
+    'SALTA': 'Salta',
+    'SAN JUAN': 'San Juan',
+    'SAN LUIS': 'San Luis',
+    'SANTA CRUZ': 'Río Gallegos',
+    'SANTA FE': 'Santa Fe',
+    'SANTIAGO DEL ESTERO': 'Santiago del Estero',
+    'TIERRA DEL FUEGO': 'Ushuaia',
+    'TUCUMAN': 'San Miguel de Tucumán',
+}
+
+def process_national(out_dir):
+    """Generate the national-level pseudo-province (argentina.json)."""
+    print('\nProcessing Argentina (national)...')
+    filename = 'departamentos-argentina.json'
+    data = download_json(filename)
+    if data is None:
+        print('  FAILED: could not download national data')
+        return
+
+    features = data.get('features', [])
+    print(f'  Found {len(features)} features')
+
+    # Pre-extract Malvinas islands rings from Islas del Atlantico Sur
+    # These will be added to Tierra del Fuego's geometry
+    MALVINAS_BBOX = {'lng': (-62.0, -57.0), 'lat': (-53.0, -50.5)}
+
+    def ring_centroid_lnglat(ring):
+        xs = [p[0] for p in ring]
+        ys = [p[1] for p in ring]
+        return sum(xs) / len(xs), sum(ys) / len(ys)
+
+    malvinas_rings = []
+    for feat in features:
+        props = feat.get('properties', {})
+        dep_name = props.get('departamento', '')
+        prov_name = props.get('provincia', '')
+        if prov_name == 'TIERRA DEL FUEGO' and dep_name == 'ISLAS DEL ATLANTICO SUR':
+            geo = feat.get('geometry', {})
+            all_polygons = []
+            if geo.get('type') == 'Polygon':
+                all_polygons.append(geo['coordinates'])
+            elif geo.get('type') == 'MultiPolygon':
+                for polygon in geo['coordinates']:
+                    all_polygons.append(polygon)
+            for polygon in all_polygons:
+                for ring in polygon:
+                    clng, clat = ring_centroid_lnglat(ring)
+                    if (MALVINAS_BBOX['lng'][0] <= clng <= MALVINAS_BBOX['lng'][1] and
+                        MALVINAS_BBOX['lat'][0] <= clat <= MALVINAS_BBOX['lat'][1]):
+                        malvinas_rings.append(ring)
+            break  # only one Atlantico Sur feature
+
+    print(f'  Extracted {len(malvinas_rings)} Malvinas island rings')
+    malvinas_rings_for_tdf = malvinas_rings[:] if malvinas_rings else []
+
+    # Group features by province, excluding Islas Malvinas (Antarctic claim)
+    # and Islas del Atlantico Sur (far-east), but adding Malvinas rings to TdF
+    prov_groups = {}
+    excluded_count = 0
+    for feat in features:
+        props = feat.get('properties', {})
+        prov_name = props.get('provincia', '')
+        dep_name = props.get('departamento', '')
+        # Skip Antarctic claim, far-east South Atlantic islands, and CABA
+        if ((prov_name == 'TIERRA DEL FUEGO' and dep_name == 'ISLAS MALVINAS') or
+            (prov_name == 'TIERRA DEL FUEGO' and dep_name == 'ISLAS DEL ATLANTICO SUR') or
+            prov_name == 'CIUDAD AUTONOMA DE BUENOS AIRES'):
+            excluded_count += 1
+            continue
+        if prov_name not in prov_groups:
+            prov_groups[prov_name] = []
+        prov_groups[prov_name].append(feat)
+
+    # Attach Malvinas rings to TdF feature group for projection
+    if malvinas_rings_for_tdf:
+        tdf_feats = prov_groups.get('TIERRA DEL FUEGO', [])
+        if tdf_feats:
+            tdf_feats.append({'geometry': {'type': 'MultiPolygon', 'coordinates': [malvinas_rings_for_tdf]}})
+
+    print(f'  Found {len(prov_groups)} provinces ({excluded_count} departments excluded)')
+
+    # Collect all coordinates for national bounds, with south clipping
+    clip_south = -56.0
+    all_coords = []
+    for prov_name, feats in prov_groups.items():
+        for feat in feats:
+            geo = feat.get('geometry', {})
+            if geo.get('type') == 'Polygon':
+                for ring in geo['coordinates']:
+                    all_coords.extend(ring)
+            elif geo.get('type') == 'MultiPolygon':
+                for polygon in geo['coordinates']:
+                    for ring in polygon:
+                        all_coords.extend(ring)
+
+    # Add Malvinas island coords to bounds (extracted from Atlantico Sur)
+    for ring in malvinas_rings_for_tdf:
+        all_coords.extend(ring)
+
+    all_coords = [c for c in all_coords if c[1] >= clip_south]
+
+    lngs = [c[0] for c in all_coords]
+    lats = [c[1] for c in all_coords]
+    bounds = (min(lngs), min(lats), max(lngs), max(lats))
+    print(f'  Bounds: lng=[{bounds[0]:.4f}, {bounds[2]:.4f}], lat=[{bounds[1]:.4f}, {bounds[3]:.4f}]')
+
+    # Pre-compute projection dimensions for coordinate clipping
+    lng_range = bounds[2] - bounds[0]
+    lat_range = bounds[3] - bounds[1]
+    clip_padding = 40
+    clip_svg_h = None
+    clip_scale_y = None
+    if lng_range > 0 and lat_range > 0:
+        clip_svg_h = 500 * lat_range / lng_range + 2 * clip_padding
+        clip_scale_y = (clip_svg_h - 2 * clip_padding) / lat_range
+
+    # Project and create province departments
+    departments = []
+    all_path_x = []
+    all_path_y = []
+
+    for prov_name, feats in prov_groups.items():
+        # Merge all department polygons into a single province outline
+        prov_polys = []
+        for feat in feats:
+            geo = feat.get('geometry', {})
+            if geo.get('type') in ('Polygon', 'MultiPolygon'):
+                try:
+                    g = shape(geo)
+                    if not g.is_empty:
+                        prov_polys.append(g)
+                except Exception:
+                    continue
+        if not prov_polys:
+            print(f'  Skipping {prov_name}: no valid polygons')
+            continue
+
+        merged = unary_union([g.buffer(0) for g in prov_polys])
+        if merged.is_empty:
+            print(f'  Skipping {prov_name}: empty union')
+            continue
+
+        # Clean micro-gaps and simplify for performance
+        merged = merged.buffer(0.001).buffer(-0.001).simplify(0.005, preserve_topology=True)
+
+        # Extract rings from merged geometry
+        all_ring_groups = []
+        if merged.geom_type == 'Polygon':
+            all_ring_groups.append([list(merged.exterior.coords)] +
+                                   [list(ring.coords) for ring in merged.interiors])
+        elif merged.geom_type == 'MultiPolygon':
+            for poly in merged.geoms:
+                all_ring_groups.append([list(poly.exterior.coords)] +
+                                       [list(ring.coords) for ring in poly.interiors])
+
+        projected_rings = []
+        for rings in all_ring_groups:
+            proj, _, _ = project_coords(rings, bounds)
+            projected_rings.extend(proj)
+
+        path = ''.join(ring_to_path(r, precision=1) for r in projected_rings) if projected_rings else ''
+        if not path:
+            print(f'  Skipping {prov_name}: no valid path')
+            continue
+
+        for ring in projected_rings:
+            for x, y in ring:
+                all_path_x.append(x)
+                all_path_y.append(y)
+
+        cx, cy = polygon_centroid(projected_rings)
+        capital = PROVINCE_CAPITALS.get(prov_name, '')
+        dept_name = smart_title(prov_name)
+
+        departments.append({
+            'name': dept_name,
+            'capital': capital,
+            'path': path,
+            'cx': round(cx, 1),
+            'cy': round(cy, 1),
+            'offshore': False,
+        })
+
+    if not departments:
+        print('  No departments generated!')
+        return
+
+    departments.sort(key=lambda d: d['cy'])
+
+    print(f'  Path x range: {min(all_path_x):.1f} to {max(all_path_x):.1f}')
+    print(f'  Path y range: {min(all_path_y):.1f} to {max(all_path_y):.1f}')
+
+    viewbox = compute_viewbox(all_path_x, all_path_y)
+    print(f'  ViewBox: {viewbox}')
+
+    result = {
+        'key': 'argentina',
+        'name': 'ARGENTINA',
+        'departments': departments,
+        'viewBox': viewbox,
+    }
+
+    out_file = os.path.join(out_dir, 'argentina.json')
+    with open(out_file, 'w', encoding='utf-8') as f:
+        json.dump(result, f, ensure_ascii=False)
+    print(f'  Written: {out_file}')
+    print(f'  {len(departments)} provinces processed')
+
 def main():
     out_dir = os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'provinces')
     os.makedirs(out_dir, exist_ok=True)
@@ -446,6 +674,9 @@ def main():
     index_file = os.path.join(os.path.dirname(out_dir), 'provinces.json')
     with open(index_file, 'w', encoding='utf-8') as f:
         json.dump(province_index, f, ensure_ascii=False)
+
+    # Generate national-level data
+    process_national(out_dir)
 
     print(f'\nDone! Processed {len(province_index)} provinces.')
     print(f'Index: {index_file}')
