@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import departmentsData from '../departments-data.json'
+import { loadProvinceData, computeLevelSizes, getProvinceName, getDeptTerm } from '../data/index'
 import sound from '../utils/sound'
 import fireworks from '../utils/fireworks'
 import { getRank } from '../utils/ranks'
+import ZoomableMap from './ZoomableMap'
 
 function shuffleArray(arr) {
   const shuffled = [...arr]
@@ -14,30 +15,11 @@ function shuffleArray(arr) {
 }
 
 const ATTEMPT_COLORS = ['#00C853', '#FFD600', '#FF9100']
-
-const LEVEL_SIZES = [4, 8, 12, 16, 20, 26]
 const LEVEL_ICONS = ['🌱', '🌿', '🌳', '🏔️', '🎓', '👑']
 
-const LEVEL_DEPT_ORDER = [
-  'Sobremonte', 'Río Seco', 'Tulumba', 'Ischilín',
-  'Totoral', 'Cruz del Eje', 'Río Primero', 'Minas',
-  'Punilla', 'Colón', 'San Justo', 'Pocho',
-  'San Alberto', 'San Javier', 'Capital', 'Santa María',
-  'Río Segundo', 'Calamuchita', 'Tercero Arriba', 'General San Martín',
-  'Unión', 'Marcos Juárez', 'Presidente Roque Sáenz Peña', 'Juárez Celman',
-  'General Roca', 'Río Cuarto'
-]
-
-const ORDERED_DEPARTMENTS = LEVEL_DEPT_ORDER.map(
-  name => departmentsData.find(d => d.name === name)
-).filter(Boolean)
-
-function getRoundSize(streak) {
-  const idx = Math.min(streak, LEVEL_SIZES.length - 1)
-  return LEVEL_SIZES[idx]
-}
-
-function MapGame({ onBack, onRoundEnd }) {
+function MapGame({ provinceKey, onBack, onRoundEnd }) {
+  const [provinceData, setProvinceData] = useState(null)
+  const [levelSizes, setLevelSizes] = useState([])
   const [roundDepts, setRoundDepts] = useState([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [correctCount, setCorrectCount] = useState(0)
@@ -47,19 +29,24 @@ function MapGame({ onBack, onRoundEnd }) {
   const [deptAttempts, setDeptAttempts] = useState({})
   const [showResult, setShowResult] = useState(false)
   const [roundTrophies, setRoundTrophies] = useState(0)
-  const [streak, setStreak] = useState(0)
   const [scorePopup, setScorePopup] = useState(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [attemptsThisQuestion, setAttemptsThisQuestion] = useState(0)
   const [resultData, setResultData] = useState(null)
+  const [levelIndex, setLevelIndex] = useState(0)
   const trophiesRef = useRef(0)
   const streakRef = useRef(0)
   const previousStreakRef = useRef(0)
   const mapRef = useRef(null)
+  const provinceName = provinceData ? provinceData.name : getProvinceName(provinceKey)
 
-  const startNewRound = useCallback((currentStreak) => {
-    const size = getRoundSize(currentStreak)
-    const selected = shuffleArray(ORDERED_DEPARTMENTS.slice(0, size))
+  const initGame = useCallback((data, streak = 0) => {
+    const sizes = computeLevelSizes(data.departments.length)
+    const idx = Math.min(streak, sizes.length - 1)
+    const size = sizes[idx]
+    const selected = shuffleArray(data.departments.slice(0, size))
+    setProvinceData(data)
+    setLevelSizes(sizes)
     setRoundDepts(selected)
     setCurrentIndex(0)
     setCorrectCount(0)
@@ -76,52 +63,80 @@ function MapGame({ onBack, onRoundEnd }) {
   }, [])
 
   useEffect(() => {
-    startNewRound(0)
-  }, [startNewRound])
+    let cancelled = false
+    loadProvinceData(provinceKey).then((data) => {
+      if (cancelled) return
+      initGame(data, 0)
+    })
+    return () => { cancelled = true }
+  }, [provinceKey, initGame])
+
+  const startNewRound = useCallback((currentStreak) => {
+    if (!provinceData) return
+    const sizes = levelSizes.length > 0 ? levelSizes : computeLevelSizes(provinceData.departments.length)
+    const idx = Math.min(currentStreak, sizes.length - 1)
+    const size = sizes[idx]
+    const selected = shuffleArray(provinceData.departments.slice(0, size))
+    setRoundDepts(selected)
+    setCurrentIndex(0)
+    setCorrectCount(0)
+    setWrongCount(0)
+    setDepartmentStates({})
+    setRevealedNames({})
+    setDeptAttempts({})
+    setShowResult(false)
+    setRoundTrophies(0)
+    trophiesRef.current = 0
+    setIsTransitioning(false)
+    setAttemptsThisQuestion(0)
+    setResultData(null)
+  }, [provinceData, levelSizes])
 
   const getPointsForAttempt = (attempt) => {
     if (attempt === 0) return 10
     if (attempt === 1) return 5
     if (attempt === 2) return 2
-    return 1
+    return 0
   }
 
   const spawnFireworks = (cx, cy) => {
     if (mapRef.current) {
       const rect = mapRef.current.getBoundingClientRect()
-      const screenX = rect.left + (cx / 500) * rect.width
-      const screenY = rect.top + (cy / 700) * rect.height
+      const vbox = provinceData.viewBox.split(' ').map(Number)
+      const screenX = rect.left + ((cx - vbox[0]) / vbox[2]) * rect.width
+      const screenY = rect.top + ((cy - vbox[1]) / vbox[3]) * rect.height
       fireworks.burstAt(screenX, screenY)
     }
   }
 
   const handleDepartmentClick = (deptName) => {
-    if (isTransitioning) return
+    if (isTransitioning || showResult) return
     if (deptAttempts[deptName] !== undefined) return
-    
+    if (mapRef.current?.wasDragging) return
+
     const currentDept = roundDepts[currentIndex]
     if (!currentDept) return
-    
+
     if (deptName === currentDept.name) {
       sound.playCorrect()
       setDeptAttempts(prev => ({ ...prev, [deptName]: attemptsThisQuestion }))
       setRevealedNames(prev => ({ ...prev, [deptName]: true }))
-      
-      const deptData = departmentsData.find(d => d.name === deptName)
+
+      const deptData = provinceData.departments.find(d => d.name === deptName)
       if (deptData) spawnFireworks(deptData.cx, deptData.cy)
-      
+
       const newCorrect = correctCount + 1
       setCorrectCount(newCorrect)
-      
+
       const points = getPointsForAttempt(attemptsThisQuestion)
       trophiesRef.current += points
       setRoundTrophies(trophiesRef.current)
-      
+
       setScorePopup({ type: 'correct', text: deptName })
-      
+
       setTimeout(() => {
         setScorePopup(null)
-        moveToNext(newCorrect, wrongCount)
+        moveToNext(newCorrect)
       }, 1100)
     } else {
       sound.playWrong()
@@ -129,7 +144,7 @@ function MapGame({ onBack, onRoundEnd }) {
       setWrongCount(prev => prev + 1)
       setAttemptsThisQuestion(prev => prev + 1)
       setScorePopup({ type: 'wrong', text: '¡Incorrecto!' })
-      
+
       setTimeout(() => {
         setScorePopup(null)
         setDepartmentStates(prev => {
@@ -141,7 +156,7 @@ function MapGame({ onBack, onRoundEnd }) {
     }
   }
 
-  const moveToNext = (correct, wrong) => {
+  const moveToNext = (correct) => {
     if (currentIndex + 1 >= roundDepts.length) {
       finishRound(correct)
     } else {
@@ -159,7 +174,7 @@ function MapGame({ onBack, onRoundEnd }) {
     const maxScore = total * 10
     const score = trophiesRef.current
     const currentLevel = streakRef.current + 1
-    const maxLevelIdx = LEVEL_SIZES.length - 1
+    const maxLevelIdx = levelSizes.length - 1
     const isMaxLevel = streakRef.current >= maxLevelIdx
 
     previousStreakRef.current = streakRef.current
@@ -176,7 +191,7 @@ function MapGame({ onBack, onRoundEnd }) {
       levelResult = 'good'
     }
 
-    setStreak(streakRef.current)
+    setLevelIndex(streakRef.current)
     onRoundEnd('map', score, maxScore)
     setResultData({ correct, total, maxScore, score, currentLevel, levelResult, isMaxLevel })
     setShowResult(true)
@@ -204,21 +219,30 @@ function MapGame({ onBack, onRoundEnd }) {
     const newStreak = parseInt(e.target.value, 10)
     fireworks.stopLoop()
     streakRef.current = newStreak
-    setStreak(newStreak)
+    setLevelIndex(newStreak)
     startNewRound(newStreak)
+  }
+
+  if (!provinceData) {
+    return (
+      <div className="game-container">
+        <div className="game-loading">Cargando datos de {provinceName}...</div>
+      </div>
+    )
   }
 
   return (
     <div className="game-container">
       <header className="game-header">
         <button className="back-btn" onClick={handleBack}>← Menú</button>
+        <div className="game-header-title">{provinceName}</div>
         <div className="game-info">
-          <select className="level-select" value={streakRef.current} onChange={handleLevelChange}>
-            {LEVEL_SIZES.map((size, i) => (
-              <option key={i} value={i}>{LEVEL_ICONS[i]} Nivel {i+1} ({size} deptos)</option>
+          <select className="level-select" value={levelIndex} onChange={handleLevelChange}>
+            {levelSizes.map((size, i) => (
+              <option key={i} value={i}>{LEVEL_ICONS[i] || '⭐'} Nivel {i+1} ({size} {getDeptTerm(provinceKey, true)})</option>
             ))}
           </select>
-          <div className="round-badge">🎯 {roundDepts.length} deptos</div>
+          <div className="round-badge">🎯 {roundDepts.length} {getDeptTerm(provinceKey, true)}</div>
           <div className="game-stat">
             <span className="label">Pregunta</span>
             <span className="value">{currentIndex + (showResult ? roundDepts.length : 1)}/{roundDepts.length}</span>
@@ -245,35 +269,46 @@ function MapGame({ onBack, onRoundEnd }) {
               <div className="progress-bar">
                 <div className="progress-fill" style={{ width: `${progress}%` }}></div>
               </div>
-              <div className="progress-text">{currentIndex + 1} de {roundDepts.length} departamentos</div>
+              <div className="progress-text">{currentIndex + 1} de {roundDepts.length} {getDeptTerm(provinceKey, true)}</div>
             </div>
           </>
         )}
         <div className={`game-round-area ${showResult ? 'with-results' : ''}`}>
-          <div className="map-container">
-            <svg ref={mapRef} className="map-svg" viewBox="0 0 500 700" xmlns="http://www.w3.org/2000/svg">
-              {departmentsData.map((dept) => (
-                <path
-                  key={dept.name}
-                  d={dept.path}
-                  fill={
-                    deptAttempts[dept.name] !== undefined
-                      ? ATTEMPT_COLORS[Math.min(deptAttempts[dept.name], 2)]
-                      : departmentStates[dept.name] === 'wrong' ? '#FF1744' :
-                      '#3a3a5c'
-                  }
-                  onClick={() => handleDepartmentClick(dept.name)}
-                  strokeLinejoin="round"
-                  strokeLinecap="round"
-                />
-              ))}
-              {departmentsData.filter(d => revealedNames[d.name]).map((dept) => (
-                <text key={`label-${dept.name}`} x={dept.cx} y={dept.cy} className="dept-label" style={{ fontSize: '7px' }}>
-                  {dept.name.length > 16 ? dept.name.substring(0, 16) + '…' : dept.name}
-                </text>
-              ))}
-            </svg>
-          </div>
+          <ZoomableMap
+            viewBox={provinceData.mainViewBox || provinceData.viewBox}
+            containerRef={mapRef}
+            offshorePips={provinceData.departments.filter(d => d.offshore).map(dept => ({
+              name: dept.name,
+              d: dept.path,
+              vb: dept.insetViewBox,
+              fill: deptAttempts[dept.name] !== undefined
+                ? ATTEMPT_COLORS[Math.min(deptAttempts[dept.name], 2)]
+                : departmentStates[dept.name] === 'wrong' ? '#FF1744' :
+                '#3a3a5c'
+            }))}
+            onOffshoreClick={handleDepartmentClick}
+          >
+            {provinceData.departments.filter(d => !d.offshore).map((dept) => (
+              <path
+                key={dept.name}
+                d={dept.path}
+                fill={
+                  deptAttempts[dept.name] !== undefined
+                    ? ATTEMPT_COLORS[Math.min(deptAttempts[dept.name], 2)]
+                    : departmentStates[dept.name] === 'wrong' ? '#FF1744' :
+                    '#3a3a5c'
+                }
+                onClick={() => handleDepartmentClick(dept.name)}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+            ))}
+            {provinceData.departments.filter(d => !d.offshore && revealedNames[d.name]).map((dept) => (
+              <text key={`label-${dept.name}`} x={dept.cx} y={dept.cy} className="dept-label" style={{ fontSize: '7px' }}>
+                {dept.name.length > 16 ? dept.name.substring(0, 16) + '…' : dept.name}
+              </text>
+            ))}
+          </ZoomableMap>
 
           {showResult && resultData && (
             <div className="result-panel-wrapper">
@@ -294,9 +329,9 @@ function MapGame({ onBack, onRoundEnd }) {
                     const rank = getRank(resultData.score, resultData.maxScore)
                     const isLegend = rank?.name === 'Leyenda Supersónica'
                     return isLegend ? (
-                      <p className="level-up-text" style={{ color: '#FFD700', fontSize: '1.2rem' }}>🌟 ¡Leyenda Supersónica! 🌟 Completaste todos los departamentos con una puntuación perfecta. ¡Sos un verdadero maestro de la geografía cordobesa!</p>
+                      <p className="level-up-text" style={{ color: '#FFD700', fontSize: '1.2rem' }}>🌟 ¡Leyenda Supersónica! 🌟 Completaste todos los {getDeptTerm(provinceKey, true)} de {provinceName} con una puntuación perfecta.</p>
                     ) : (
-                      <p className="level-up-text" style={{ color: '#6C63FF' }}>¡Completaste todos los niveles! Sos un verdadero experto en los departamentos de Córdoba.</p>
+                      <p className="level-up-text" style={{ color: '#6C63FF' }}>¡Completaste todos los niveles de {provinceName}! Sos un verdadero experto.</p>
                     )
                   })()}
                   {resultData.levelResult === 'good' && (
@@ -312,7 +347,7 @@ function MapGame({ onBack, onRoundEnd }) {
                     return r ? <p className="rank-text">{r.icon} Rango: {r.name}</p> : null
                   })()}
                   {Object.values(deptAttempts).some(v => v > 0) && (
-                    <p className="review-text">Deberías repasar los departamentos que no están en verde!</p>
+                    <p className="review-text">Deberías repasar los {getDeptTerm(provinceKey, true)} que no están en verde!</p>
                   )}
                   <div className="color-legend">
                     <span><span className="legend-dot" style={{ background: '#00C853' }}></span> Excelente</span>
@@ -326,8 +361,8 @@ function MapGame({ onBack, onRoundEnd }) {
                       <button className="btn" onClick={handlePlayAgain}>Siguiente nivel</button>
                     )}
                   </div>
+                </div>
               </div>
-            </div>
             </div>
           )}
         </div>

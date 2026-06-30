@@ -27,7 +27,7 @@ class Sound {
       
       oscillator.start(ctx.currentTime)
       oscillator.stop(ctx.currentTime + duration)
-    } catch (e) {
+    } catch {
       // Silently fail if audio context is not available
     }
   }

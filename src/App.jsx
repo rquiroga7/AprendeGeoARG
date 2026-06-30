@@ -5,69 +5,92 @@ import MapGame from './components/MapGame'
 import CapitalGame from './components/CapitalGame'
 import { getRankIndex } from './utils/ranks'
 
-const STATS_KEY = 'geoAprende_cordoba_stats'
+const STATS_KEY = 'aprendeGeoAR_stats'
 
 function loadStats() {
   try {
     const raw = localStorage.getItem(STATS_KEY)
     if (raw) return JSON.parse(raw)
-  } catch {}
-  return {
-    map: { best: 0, last: 0, maxPossible: 0, lastMax: 0, bestRankIdx: -1 },
-    capital: { best: 0, last: 0, maxPossible: 0, lastMax: 0, bestRankIdx: -1 }
+  } catch {
+    return {}
   }
+  return {}
 }
 
 function saveStats(stats) {
   try {
     localStorage.setItem(STATS_KEY, JSON.stringify(stats))
-  } catch {}
+  } catch {
+    // ignore
+  }
 }
 
-function saveRoundStats(mode, trophies, maxPossible) {
-  const stats = loadStats()
-  const key = mode
-  stats[key].last = trophies
-  stats[key].lastMax = maxPossible
-  const rankIdx = getRankIndex(trophies, maxPossible)
-  if (rankIdx > (stats[key].bestRankIdx ?? -1)) {
-    stats[key].bestRankIdx = rankIdx
+function getProvinceStatsSafe(stats, provinceKey) {
+  if (!stats[provinceKey]) {
+    stats[provinceKey] = {}
   }
-  if (trophies > stats[key].best) {
-    stats[key].best = trophies
-    stats[key].maxPossible = maxPossible
+  const p = stats[provinceKey]
+  if (!p.map) {
+    p.map = { best: 0, last: 0, maxPossible: 0, lastMax: 0, bestRankIdx: -1 }
+  }
+  if (!p.capital) {
+    p.capital = { best: 0, last: 0, maxPossible: 0, lastMax: 0, bestRankIdx: -1 }
+  }
+  return p
+}
+
+function saveRoundStats(provinceKey, mode, trophies, maxPossible) {
+  const stats = loadStats()
+  const p = getProvinceStatsSafe(stats, provinceKey)
+  const key = mode
+  p[key].last = trophies
+  p[key].lastMax = maxPossible
+  const rankIdx = getRankIndex(trophies, maxPossible)
+  if (rankIdx > (p[key].bestRankIdx ?? -1)) {
+    p[key].bestRankIdx = rankIdx
+  }
+  if (trophies > p[key].best) {
+    p[key].best = trophies
+    p[key].maxPossible = maxPossible
   }
   saveStats(stats)
 }
 
 function App() {
   const [gameMode, setGameMode] = useState(null)
+  const [selectedProvince, setSelectedProvince] = useState(null)
 
-  const handleSelectMode = (mode) => {
+  const handleSelectMode = (mode, provinceKey) => {
+    setSelectedProvince(provinceKey)
     setGameMode(mode)
   }
 
   const handleBackToMenu = () => {
     setGameMode(null)
+    setSelectedProvince(null)
   }
 
   const handleRoundEnd = useCallback((mode, trophies, maxPossible) => {
-    saveRoundStats(mode, trophies, maxPossible)
-  }, [])
+    if (selectedProvince) {
+      saveRoundStats(selectedProvince, mode, trophies, maxPossible)
+    }
+  }, [selectedProvince])
 
   return (
     <div className="app">
       {!gameMode && (
         <Menu onSelectMode={handleSelectMode} />
       )}
-      {gameMode === 'map' && (
+      {gameMode === 'map' && selectedProvince && (
         <MapGame
+          provinceKey={selectedProvince}
           onBack={handleBackToMenu}
           onRoundEnd={handleRoundEnd}
         />
       )}
-      {gameMode === 'capital' && (
+      {gameMode === 'capital' && selectedProvince && (
         <CapitalGame
+          provinceKey={selectedProvince}
           onBack={handleBackToMenu}
           onRoundEnd={handleRoundEnd}
         />

@@ -22,10 +22,6 @@
 .menu-title {
   font-size: 2.8rem;
   font-weight: 900;
-  background: linear-gradient(135deg, #6C63FF, #FF6584);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
   margin-bottom: 8px;
 }
 
@@ -116,20 +112,23 @@
 .mode-stats {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
   border-top: 1px solid rgba(255,255,255,0.08);
   padding-top: 14px;
 }
 
 .mode-stat {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 2px;
   font-size: 0.82rem;
 }
 
 .stat-label {
   color: #a0aec0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .stat-value {

@@ -37,6 +37,13 @@ body {
   flex-direction: column;
 }
 
+.game-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
 /* ===== MENU ===== */
 .menu {
   display: flex;
@@ -73,10 +80,71 @@ body {
 .menu-levels-info {
   font-size: 0.9rem;
   color: var(--text-secondary);
-  margin-bottom: 32px;
+  margin-bottom: 24px;
   max-width: 480px;
   line-height: 1.5;
   opacity: 0.8;
+}
+
+.menu-province-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  background: var(--bg-card);
+  border: 2px solid rgba(108, 99, 255, 0.3);
+  border-radius: 16px;
+  padding: 14px 24px;
+}
+
+.menu-province-selector label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.menu-province-selector select {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(108, 99, 255, 0.3);
+  border-radius: 10px;
+  color: white;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  min-width: 250px;
+  appearance: auto;
+}
+
+.menu-province-selector select:hover {
+  border-color: var(--primary);
+}
+
+.menu-province-selector select option {
+  background: #1a1a3e;
+  color: white;
+}
+
+.game-header-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: rgba(108, 99, 255, 0.15);
+  border: 1px solid rgba(108, 99, 255, 0.3);
+  border-radius: 20px;
+  padding: 4px 16px;
+}
+
+.game-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
 }
 
 .trophy-display {
@@ -430,6 +498,8 @@ body {
   align-items: center;
   gap: 24px;
   width: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 .game-round-area.with-results {
@@ -673,6 +743,202 @@ body {
 }
 
 /* ===== RESPONSIVE ===== */
+/* ===== Zoomable Map ===== */
+.zoomable-map {
+  position: relative;
+  width: 100%;
+  max-width: 550px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+}
+
+.zoomable-map {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 550px;
+}
+
+.zoomable-map-viewport {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  border-radius: 8px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.zoomable-map-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.4));
+  pointer-events: visibleFill;
+}
+
+.zoomable-map-svg path {
+  stroke: #1a1a2e;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  cursor: pointer;
+  transition: fill 0.2s, stroke 0.2s;
+  pointer-events: visibleFill;
+}
+
+.zoomable-map-svg path:hover {
+  stroke: var(--primary);
+  stroke-width: 2;
+  filter: brightness(1.2);
+}
+
+.zoomable-map-svg path.correct {
+  fill: var(--success) !important;
+  stroke: #00a844;
+  stroke-width: 2;
+}
+
+.zoomable-map-svg path.wrong {
+  fill: var(--danger) !important;
+  stroke: #cc1236;
+  stroke-width: 2;
+}
+
+.zoomable-map-svg path.revealed {
+  fill: var(--primary) !important;
+  stroke: var(--primary-dark);
+  stroke-width: 2;
+}
+
+.zoomable-map-pips {
+  position: absolute;
+  bottom: 60px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 5;
+}
+
+.zoomable-map-pip {
+  width: 130px;
+  height: 110px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(26, 26, 46, 0.95);
+  display: flex;
+  pointer-events: auto;
+}
+
+.zoomable-map-pip svg {
+  cursor: pointer;
+}
+
+.zoomable-map-inset-svg {
+  flex: 1;
+  width: 100%;
+  display: block;
+}
+
+.zoomable-map-pip path {
+  fill: #3a3a5c;
+  stroke: #1a1a2e;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.zoomable-map-controls {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(22, 33, 62, 0.9);
+  border: 1px solid rgba(108, 99, 255, 0.3);
+  border-radius: 10px;
+  padding: 4px;
+  backdrop-filter: blur(6px);
+  z-index: 10;
+}
+
+.zoom-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(108, 99, 255, 0.2);
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  font-family: 'Poppins', sans-serif;
+  line-height: 1;
+}
+
+.zoom-btn:hover:not(:disabled) {
+  background: rgba(108, 99, 255, 0.4);
+}
+
+.zoom-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.zoom-level {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 36px;
+  text-align: center;
+}
+
+.zoomable-map-pip path {
+  fill: #3a3a5c;
+  stroke: #1a1a2e;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.zoomable-map-reset {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: background 0.15s;
+  font-family: 'Poppins', sans-serif;
+}
+
+.zoomable-map-reset:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 @media (max-width: 768px) {
   .menu-title {
     font-size: 2rem;

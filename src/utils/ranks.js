@@ -8,26 +8,21 @@ export const RANKS = [
   { name: 'Oro I', icon: '🥇', color: '#FFD700' },
   { name: 'Oro II', icon: '🥇', color: '#FFD700' },
   { name: 'Oro III', icon: '🥇', color: '#FFD700' },
-  { name: 'Diamante I', icon: '🔷', color: '#448AFF' },
-  { name: 'Diamante II', icon: '🔷', color: '#448AFF' },
-  { name: 'Campeón I', icon: '🏆', color: '#FF6F00' },
-  { name: 'Campeón II', icon: '🏆', color: '#FF6F00' },
-  { name: 'Gran Campeón I', icon: '👑', color: '#D500F9' },
-  { name: 'Gran Campeón II', icon: '👑', color: '#D500F9' },
+  { name: 'Diamante', icon: '🔷', color: '#448AFF' },
+  { name: 'Campeón', icon: '🏆', color: '#FF6F00' },
+  { name: 'Gran Campeón', icon: '👑', color: '#D500F9' },
   { name: 'Leyenda Supersónica', icon: '🌟', color: '#FF6D00' },
 ]
 
-const LEVEL_BASE = { 4: 0, 8: 3, 12: 6, 16: 9, 20: 11, 26: 13 }
+const PCT = [0.05, 0.20, 0.35, 0.47, 0.57, 0.67, 0.75, 0.81, 0.86, 0.90, 0.93, 0.96]
 
 export function getRankIndex(score, maxScore) {
   if (maxScore <= 0) return -1
-  const deptCount = maxScore / 10
-  const levelBase = LEVEL_BASE[deptCount]
-  if (levelBase === undefined) return -1
   const pct = score / maxScore
-  if (pct >= 0.85) return levelBase + 2
-  if (pct >= 0.5) return levelBase + 1
-  return levelBase
+  for (let i = PCT.length - 1; i >= 0; i--) {
+    if (pct >= PCT[i]) return i + 1
+  }
+  return 0
 }
 
 export function getRank(score, maxScore) {

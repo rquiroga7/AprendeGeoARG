@@ -1,22 +1,29 @@
 import { useState, useEffect } from 'react'
-import './Menu.css'
 import { RANKS } from '../utils/ranks'
+import { getProvinces, getDeptTerm } from '../data/index'
+import './Menu.css'
 
-const STATS_KEY = 'geoAprende_cordoba_stats'
+const STATS_KEY = 'aprendeGeoAR_stats'
 
 function loadStats() {
   try {
     const raw = localStorage.getItem(STATS_KEY)
     if (raw) return JSON.parse(raw)
-  } catch {}
-  return {
-    map: { best: 0, last: 0, maxPossible: 0, lastMax: 0, bestRankIdx: -1 },
-    capital: { best: 0, last: 0, maxPossible: 0, lastMax: 0, bestRankIdx: -1 }
+  } catch {
+    return {}
   }
+  return {}
 }
+
+function getProvinceModeStats(stats, provinceKey, mode) {
+  return stats[provinceKey]?.[mode] || { best: 0, last: 0, maxPossible: 0, lastMax: 0, bestRankIdx: -1 }
+}
+
+const provinces = getProvinces()
 
 function Menu({ onSelectMode }) {
   const [stats, setStats] = useState(loadStats)
+  const [selectedProvince, setSelectedProvince] = useState(provinces[0]?.key || '')
 
   useEffect(() => {
     const handler = () => setStats(loadStats())
@@ -31,52 +38,74 @@ function Menu({ onSelectMode }) {
     return `${rank.icon} ${rank.name}`
   }
 
+  const provStats = getProvinceModeStats(stats, selectedProvince, 'map')
+  const provCapStats = getProvinceModeStats(stats, selectedProvince, 'capital')
+
   return (
     <div className="menu">
       <div className="menu-logo">🗺️</div>
-      <h1 className="menu-title">GeoAR</h1>
-      <p className="menu-subtitle">Aprendé los departamentos y cabeceras de las provincias Argentinas</p>
+      <h1 className="menu-title">
+        <span style={{ color: '#4FC3F7', WebkitTextFillColor: '#4FC3F7' }}>Aprende</span>
+        <span style={{ color: '#FFFFFF', WebkitTextFillColor: '#FFFFFF' }}>G</span>
+        <span style={{ color: '#FFD700', WebkitTextFillColor: '#FFD700' }}>e</span>
+        <span style={{ color: '#FFFFFF', WebkitTextFillColor: '#FFFFFF' }}>o</span>
+        <span style={{ color: '#4FC3F7', WebkitTextFillColor: '#4FC3F7' }}>ARG</span>
+      </h1>
+      <p className="menu-subtitle">Aprendé los departamentos y cabeceras de todas las provincias argentinas</p>
+
+      <div className="menu-province-selector">
+        <label htmlFor="province-select">Provincia:</label>
+        <select
+          id="province-select"
+          value={selectedProvince}
+          onChange={(e) => setSelectedProvince(e.target.value)}
+        >
+          {provinces.map((p) => (
+            <option key={p.key} value={p.key}>{p.name} ({p.count} {getDeptTerm(p.key, true)})</option>
+          ))}
+        </select>
+      </div>
 
       <p className="menu-levels-info">
-        El juego tiene 6 niveles de dificultad con más departamentos por nivel.
-        Usá el menú de nivel en la parte superior para saltear a cualquier nivel en cualquier momento.
+        Cada provincia tiene niveles de dificultad que aumentan la cantidad de {getDeptTerm(selectedProvince, true)}
+        incluidos, ordenados de norte a sur.
       </p>
 
       <div className="mode-cards">
-        <div className="mode-card" onClick={() => onSelectMode('map')}>
+        <div className="mode-card" onClick={() => onSelectMode('map', selectedProvince)}>
           <div className="icon">📍</div>
-          <h3>Ubicá el Departamento</h3>
-          <p>Se te nombre un departamento y deberás encontrarlo en el mapa.</p>
-          <div className="mode-stats">
-            <div className="mode-stat">
-              <span className="stat-label">Mejor actuación</span>
-              <span className="stat-value">{renderRank(stats.map.bestRankIdx)}</span>
+          <h3>Ubicá el {getDeptTerm(selectedProvince, false, true)}</h3>
+          <p>Se te nombre un {getDeptTerm(selectedProvince)} y deberás encontrarlo en el mapa.</p>
+          {provStats.best > 0 && (
+            <div className="mode-stats">
+              <div className="mode-stat">
+                <span className="stat-label">Mejor actuación</span>
+                <span className="stat-value">{renderRank(provStats.bestRankIdx)}</span>
+              </div>
+              <div className="mode-stat">
+                <span className="stat-label">Última partida</span>
+                <span className="stat-value">{provStats.last > 0 ? `${provStats.last}/${provStats.lastMax} pts` : '—'}</span>
+              </div>
             </div>
-            <div className="mode-stat">
-              <span className="stat-label">Última partida</span>
-              <span className="stat-value">
-                {stats.map.last > 0 ? `${stats.map.last} pts` : '—'}
-              </span>
-            </div>
-          </div>
+          )}
         </div>
 
-        <div className="mode-card" onClick={() => onSelectMode('capital')}>
+        <div className="mode-card" onClick={() => onSelectMode('capital', selectedProvince)}>
           <div className="icon">🏙️</div>
           <h3>¿Cuál es la Cabecera?</h3>
-          <p>Se te muestra un departamento y deberás elegir su ciudad cabecera.</p>
-          <div className="mode-stats">
-            <div className="mode-stat">
-              <span className="stat-label">Mejor actuación</span>
-              <span className="stat-value">{renderRank(stats.capital.bestRankIdx)}</span>
+          <p>Se te muestra un {getDeptTerm(selectedProvince)} y deberás elegir su ciudad cabecera.</p>
+          {provCapStats.best > 0 && (
+            <div className="mode-stats">
+              <div className="mode-stat">
+                <span className="stat-label">Mejor actuación</span>
+                <span className="stat-value">{renderRank(provCapStats.bestRankIdx)}</span>
+              </div>
+              <div className="mode-stat">
+                <span className="stat-label">Última partida</span>
+                <span className="stat-value">{provCapStats.last > 0 ? `${provCapStats.last}/${provCapStats.lastMax} pts` : '—'}</span>
+              </div>
             </div>
-            <div className="mode-stat">
-              <span className="stat-label">Última partida</span>
-              <span className="stat-value">
-                {stats.capital.last > 0 ? `${stats.capital.last} pts` : '—'}
-              </span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
