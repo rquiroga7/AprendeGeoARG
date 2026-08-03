@@ -51,7 +51,7 @@ function Menu({ onSelectMode }) {
         <span style={{ color: '#FFFFFF', WebkitTextFillColor: '#FFFFFF', WebkitTextStroke: '0.5px rgba(255,255,255,0.5)' }}>o</span>
         <span style={{ color: '#4FC3F7', WebkitTextFillColor: '#4FC3F7', WebkitTextStroke: '0.5px rgba(255,255,255,0.5)' }}>ARG</span>
       </h1>
-      <p className="menu-subtitle">Aprendé los departamentos, provincias, cabeceras y capitales de toda la Argentina</p>
+      <p className="menu-subtitle">Aprendé los departamentos, provincias, cabeceras y capitales de toda la Argentina.<br />Elige el mapa nacional/provincial que quieres jugar:</p>
 
       <div className="menu-province-selector">
         <label htmlFor="province-select">Provincia:</label>
@@ -93,8 +93,8 @@ function Menu({ onSelectMode }) {
 
         <div className="mode-card" onClick={() => onSelectMode('capital', selectedProvince)}>
           <div className="icon">🏙️</div>
-          <h3>¿Cuál es la Cabecera?</h3>
-          <p>Se te muestra {selectedProvince === 'argentina' ? 'una' : 'un'} {getDeptTerm(selectedProvince)} y deberás elegir su ciudad cabecera.</p>
+          <h3>{selectedProvince === 'argentina' ? '¿Cuál es la capital provincial?' : '¿Cuál es la Cabecera?'}</h3>
+          <p>Se te muestra {selectedProvince === 'argentina' ? 'una provincia' : `un ${getDeptTerm(selectedProvince)}`} y deberás elegir su {selectedProvince === 'argentina' ? 'ciudad capital' : 'ciudad cabecera'}.</p>
           {provCapStats.best > 0 && (
             <div className="mode-stats">
               <div className="mode-stat">
