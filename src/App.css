@@ -505,17 +505,17 @@ body {
 .game-round-area.with-results {
   flex-direction: row;
   justify-content: flex-start;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 0;
   position: relative;
 }
 
-.game-round-area.with-results .map-container {
-  position: absolute;
-  left: max(20px, calc(50% - 600px));
-  width: 550px;
-  max-width: calc(100% - 420px);
+.game-round-area.with-results .zoomable-map {
+  flex: 1;
+  min-height: 0;
+  max-width: 550px;
   margin: 0;
+  align-self: stretch;
 }
 
 .result-panel-wrapper {
@@ -1056,8 +1056,12 @@ body {
     position: static;
   }
 
-  .game-round-area.with-results .map-container {
+  .game-round-area.with-results .zoomable-map {
+    flex: 1;
+    min-height: 0;
+    max-width: 550px;
     margin: 0 auto;
+    align-self: stretch;
   }
 
   .result-panel-wrapper {
@@ -1084,9 +1088,12 @@ body {
     position: static;
   }
 
-  .game-round-area.with-results .map-container {
-    position: static;
+  .game-round-area.with-results .zoomable-map {
+    flex: 1;
+    min-height: 0;
+    max-width: 550px;
     margin: 0 auto;
+    align-self: stretch;
   }
 
   .result-panel-wrapper {
