@@ -136,6 +136,25 @@
   color: #FFD700;
 }
 
+.menu-footer {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
+  text-align: center;
+}
+
+.menu-footer a {
+  color: #a0aec0;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.menu-footer a:hover {
+  color: #6C63FF;
+}
+
 @media (max-width: 768px) {
   .menu-title {
     font-size: 2rem;

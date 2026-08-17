@@ -109,6 +109,16 @@ function Menu({ onSelectMode }) {
           )}
         </div>
       </div>
+
+      <footer className="menu-footer">
+        <a
+          href="https://github.com/rquiroga7/AprendeGeoARG"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          💬 ¿Dudas, errores o sugerencias? Dejanos tu comentario en el repositorio del proyecto
+        </a>
+      </footer>
     </div>
   )
 }
