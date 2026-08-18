@@ -864,7 +864,7 @@ body {
 
 .zoomable-map-pips {
   position: absolute;
-  bottom: 60px;
+  bottom: calc(60px + env(safe-area-inset-bottom, 0px));
   right: 12px;
   display: flex;
   flex-direction: column;
@@ -903,7 +903,7 @@ body {
 
 .zoomable-map-controls {
   position: absolute;
-  bottom: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   right: 12px;
   display: flex;
   align-items: center;
