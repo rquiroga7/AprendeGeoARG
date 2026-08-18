@@ -25,11 +25,14 @@ function ZoomableMap({ children, viewBox: baseViewBox, className = '', style = {
   const currentVBRef = useRef(parseViewBox(baseViewBox))
 
   const updateZoomFromVB = useCallback((vb) => {
-    setZoom(base.current.vw / vb.vw)
+    const z = base.current.vw / vb.vw
+    setZoom(Number.isFinite(z) ? z : 1)
   }, [])
 
   const clampVB = useCallback((vb) => {
     const b = base.current
+    const finite = [vb.vx, vb.vy, vb.vw, vb.vh].every(Number.isFinite)
+    if (!finite || vb.vw <= 0 || vb.vh <= 0) return { ...b }
     const clamped = { ...vb }
     if (clamped.vw < b.vw / MAX_ZOOM) clamped.vw = b.vw / MAX_ZOOM
     if (clamped.vh < b.vh / MAX_ZOOM) clamped.vh = b.vh / MAX_ZOOM
@@ -56,16 +59,19 @@ function ZoomableMap({ children, viewBox: baseViewBox, className = '', style = {
     const container = containerRef.current
     if (!container) return
     const rect = container.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0) return
     const cur = currentVBRef.current
+    const px = (clientX - rect.left) / rect.width
+    const py = (clientY - rect.top) / rect.height
 
-    const svgX = cur.vx + ((clientX - rect.left) / rect.width) * cur.vw
-    const svgY = cur.vy + ((clientY - rect.top) / rect.height) * cur.vh
+    const svgX = cur.vx + px * cur.vw
+    const svgY = cur.vy + py * cur.vh
 
-    const clampedZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom))
+    const clampedZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Number.isFinite(newZoom) ? newZoom : 1))
     const newVw = base.current.vw / clampedZoom
     const newVh = base.current.vh / clampedZoom
-    const newVx = svgX - ((clientX - rect.left) / rect.width) * newVw
-    const newVy = svgY - ((clientY - rect.top) / rect.height) * newVh
+    const newVx = svgX - px * newVw
+    const newVy = svgY - py * newVh
 
     applyVB({ vx: newVx, vy: newVy, vw: newVw, vh: newVh })
   }, [containerRef, applyVB])
@@ -105,6 +111,7 @@ function ZoomableMap({ children, viewBox: baseViewBox, className = '', style = {
       const container = containerRef.current
       if (!container) return
       const rect = container.getBoundingClientRect()
+      if (rect.width <= 0 || rect.height <= 0) return
       const ps = touchState.panStartVB
       const dx = t.clientX - touchState.startX
       const dy = t.clientY - touchState.startY
@@ -114,7 +121,7 @@ function ZoomableMap({ children, viewBox: baseViewBox, className = '', style = {
     } else if (touchState.type === 'pinch' && e.touches.length === 2) {
       const t1 = e.touches[0], t2 = e.touches[1]
       const newDist = distance(t1, t2)
-      const ratio = newDist / touchState.startDist
+      const ratio = touchState.startDist > 0 ? newDist / touchState.startDist : 1
       const newZoom = touchState.startZoom * ratio
       const midX = (t1.clientX + t2.clientX) / 2
       const midY = (t1.clientY + t2.clientY) / 2
@@ -145,6 +152,7 @@ function ZoomableMap({ children, viewBox: baseViewBox, className = '', style = {
     const container = containerRef.current
     if (!container) return
     const rect = container.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0) return
     const newVx = panStartVB.vx - (dx / rect.width) * panStartVB.vw
     const newVy = panStartVB.vy - (dy / rect.height) * panStartVB.vh
     applyVB({ ...panStartVB, vx: newVx, vy: newVy })

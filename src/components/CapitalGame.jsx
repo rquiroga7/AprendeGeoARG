@@ -167,6 +167,7 @@ function CapitalGame({ provinceKey, onBack, onRoundEnd }) {
       }
       setCurrentIndex(nextIdx)
       setIsAnswered(false)
+      setSelectedOption(null)
     }
   }
 
