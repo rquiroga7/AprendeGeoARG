@@ -328,6 +328,22 @@ body {
   text-underline-offset: 4px;
 }
 
+.map-game-target {
+  display: none;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--warning);
+  background: rgba(255, 214, 0, 0.12);
+  border: 1px solid rgba(255, 214, 0, 0.35);
+  border-radius: 20px;
+  padding: 4px 14px;
+}
+
+.map-game-target span {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* ===== MAP GAME ===== */
 .map-container {
   position: relative;
@@ -982,6 +998,58 @@ body {
     flex-wrap: wrap;
     gap: 6px;
     justify-content: center;
+  }
+
+  .map-game-play {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .map-game-play .game-header {
+    padding: 8px 10px;
+    gap: 5px;
+  }
+
+  .map-game-play .map-game-target {
+    display: inline-block;
+  }
+
+  .map-game-play .game-info {
+    gap: 8px;
+  }
+
+  .map-game-play .game-content {
+    padding: 10px;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .map-game-play .question-bar {
+    display: none;
+  }
+
+  .map-game-play .progress-container {
+    margin-bottom: 8px;
+  }
+
+  .map-game-play .game-round-area {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .map-game-play .game-stat {
+    gap: 2px;
+  }
+
+  .map-game-play .game-header-title {
+    padding: 2px 10px;
+    font-size: 0.85rem;
+  }
+
+  .map-game-play .back-btn {
+    padding: 5px 12px;
+    font-size: 0.8rem;
   }
   
   .game-info {

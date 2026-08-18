@@ -233,17 +233,19 @@ function MapGame({ provinceKey, onBack, onRoundEnd }) {
   }
 
   return (
-    <div className="game-container">
+    <div className={`game-container map-game ${showResult ? 'map-game-result' : 'map-game-play'}`}>
       <header className="game-header">
         <button className="back-btn" onClick={handleBack}>← Menú</button>
         <div className="game-header-title">{provinceName}</div>
+        {!showResult && currentDept && (
+          <div className="map-game-target">Hacé click en: <span>{currentDept.name}</span></div>
+        )}
         <div className="game-info">
           <select className="level-select" value={levelIndex} onChange={handleLevelChange}>
             {levelSizes.map((size, i) => (
               <option key={i} value={i}>{LEVEL_ICONS[i] || '⭐'} Nivel {i+1} ({size} {getDeptTerm(provinceKey, true)})</option>
             ))}
           </select>
-          <div className="round-badge">🎯 {roundDepts.length} {getDeptTerm(provinceKey, true)}</div>
           <div className="game-stat">
             <span className="label">Pregunta</span>
             <span className="value">{showResult ? roundDepts.length : currentIndex + 1}/{roundDepts.length}</span>
