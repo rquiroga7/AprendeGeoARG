@@ -1029,14 +1029,22 @@ body {
   }
 
   .map-game-play {
+    position: relative;
     height: 100vh;
     height: 100dvh;
     overflow: hidden;
   }
 
   .map-game-play .game-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
     padding: 8px 10px;
     gap: 5px;
+    background: linear-gradient(rgba(22, 33, 62, 0.85), rgba(22, 33, 62, 0.35));
+    border-bottom: none;
   }
 
   .map-game-play .game-header-top {
@@ -1081,7 +1089,9 @@ body {
   }
 
   .map-game-play .game-content {
-    padding: 10px;
+    position: absolute;
+    inset: 0;
+    padding: 0;
     min-height: 0;
     overflow: hidden;
   }
