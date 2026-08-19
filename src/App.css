@@ -1201,6 +1201,10 @@ body {
     font-size: 1.5rem;
   }
 
+  .round-results .color-legend {
+    display: none;
+  }
+
   .game-round-area.with-results {
     flex-direction: column;
     align-items: center;

@@ -349,9 +349,6 @@ function MapGame({ provinceKey, onBack, onRoundEnd }) {
                     {resultData.levelResult === 'good' && '¡Bien hecho!'}
                     {resultData.levelResult === 'fail' && '¡Seguí intentando!'}
                   </h2>
-                  {resultData.levelResult === 'pass' && !resultData.isMaxLevel && (
-                    <p className="level-up-text">¡Excelentes respuestas! Pasando a nivel {resultData.currentLevel + 1} de dificultad</p>
-                  )}
                   {resultData.levelResult === 'pass' && resultData.isMaxLevel && (() => {
                     const rank = getRank(resultData.score, resultData.maxScore)
                     const isLegend = rank?.name === 'Leyenda Supersónica'

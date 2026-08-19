@@ -307,8 +307,8 @@ function CapitalGame({ provinceKey, onBack, onRoundEnd }) {
                     />
                   ))}
                   <text x={currentDept.cx} y={currentDept.cy}
-                    style={{ fontSize: '20px', fill: '#1a1a2e', fontWeight: '900', textAnchor: 'middle', pointerEvents: 'none',
-                      paintOrder: 'stroke', stroke: '#ffffff', strokeWidth: '3px', strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                    style={{ fontSize: '20px', fill: '#ffffff', fontWeight: '900', textAnchor: 'middle', pointerEvents: 'none',
+                      paintOrder: 'stroke', stroke: '#1a1a2e', strokeWidth: '3px', strokeLinecap: 'round', strokeLinejoin: 'round' }}>
                     {currentDept.name}
                   </text>
                 </svg>
@@ -380,9 +380,6 @@ function CapitalGame({ provinceKey, onBack, onRoundEnd }) {
                     {resultData.levelResult === 'good' && '¡Bien hecho!'}
                     {resultData.levelResult === 'fail' && '¡Seguí intentando!'}
                   </h2>
-                  {resultData.levelResult === 'pass' && !resultData.isMaxLevel && (
-                    <p className="level-up-text">¡Excelentes respuestas! Pasando a nivel {resultData.currentLevel + 1} de dificultad</p>
-                  )}
                   {resultData.levelResult === 'pass' && resultData.isMaxLevel && (() => {
                     const rank = getRank(resultData.score, resultData.maxScore)
                     const isLegend = rank?.name === 'Leyenda Supersónica'
