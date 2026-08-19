@@ -983,6 +983,13 @@ body {
   background: rgba(255, 255, 255, 0.3);
 }
 
+@media (hover: none) {
+  .map-svg path:hover,
+  .zoomable-map-svg path:hover {
+    filter: none;
+  }
+}
+
 @media (max-width: 768px) {
   .menu-title {
     font-size: 2rem;
@@ -1035,6 +1042,10 @@ body {
     right: 0;
     bottom: 0;
     overflow: hidden;
+  }
+
+  .map-game-play .zoomable-map-svg {
+    filter: none;
   }
 
   .map-game-play .zoomable-map-controls {
