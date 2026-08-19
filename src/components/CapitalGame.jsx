@@ -43,6 +43,8 @@ function CapitalGame({ provinceKey, onBack, onRoundEnd }) {
   const trophiesRef = useRef(0)
   const streakRef = useRef(0)
   const previousStreakRef = useRef(0)
+  const resultMapRef = useRef(null)
+  const [resultMapSize, setResultMapSize] = useState({ w: 0, h: 0 })
   const provinceName = provinceData ? provinceData.name : getProvinceName(provinceKey)
 
   const allCapitalsRef = useRef([])
@@ -86,6 +88,19 @@ function CapitalGame({ provinceKey, onBack, onRoundEnd }) {
     })
     return () => { cancelled = true }
   }, [provinceKey, initGame])
+
+  useEffect(() => {
+    const el = resultMapRef.current
+    if (!el || !showResult) return
+    const update = () => {
+      const r = el.getBoundingClientRect()
+      setResultMapSize({ w: r.width, h: r.height })
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [showResult])
 
   const startNewRound = useCallback((currentStreak) => {
     if (!provinceData) return
@@ -234,6 +249,12 @@ function CapitalGame({ provinceKey, onBack, onRoundEnd }) {
   const currentDept = roundDepts[currentIndex]
   const progress = roundDepts.length > 0 ? ((currentIndex) / roundDepts.length) * 100 : 0
 
+  const resultMapVB = provinceData ? (provinceData.mainViewBox || provinceData.viewBox).split(' ').map(Number) : [0, 0, 540, 540]
+  const resultScale = resultMapSize.w > 0 && resultMapSize.h > 0 && resultMapVB[2] > 0 && resultMapVB[3] > 0
+    ? Math.min(resultMapSize.w / resultMapVB[2], resultMapSize.h / resultMapVB[3])
+    : 0.65
+  const resultLabelFontSize = resultScale > 0 ? Math.max(8, Math.round(11 / resultScale)) : 12
+
   return (
     <div className="game-container">
       <header className="game-header">
@@ -286,7 +307,7 @@ function CapitalGame({ provinceKey, onBack, onRoundEnd }) {
                     />
                   ))}
                   <text x={currentDept.cx} y={currentDept.cy}
-                    style={{ fontSize: '11px', fill: '#1a1a2e', fontWeight: '900', textAnchor: 'middle', pointerEvents: 'none',
+                    style={{ fontSize: '20px', fill: '#1a1a2e', fontWeight: '900', textAnchor: 'middle', pointerEvents: 'none',
                       paintOrder: 'stroke', stroke: '#ffffff', strokeWidth: '3px', strokeLinecap: 'round', strokeLinejoin: 'round' }}>
                     {currentDept.name}
                   </text>
@@ -319,6 +340,7 @@ function CapitalGame({ provinceKey, onBack, onRoundEnd }) {
           <div className="game-round-area with-results">
             <ZoomableMap
               viewBox={provinceData.mainViewBox || provinceData.viewBox}
+              containerRef={resultMapRef}
               offshorePips={provinceData.departments.filter(d => d.offshore).map(dept => ({
                 name: dept.name,
                 d: dept.path,
@@ -341,9 +363,9 @@ function CapitalGame({ provinceKey, onBack, onRoundEnd }) {
               ))}
               {provinceData.departments.filter(d => !d.offshore && deptAttempts[d.name] !== undefined).map((dept) => (
                 <text key={`label-${dept.name}`} x={dept.cx} y={dept.cy}
-                  style={{ fontSize: '7px', fill: 'white', textAnchor: 'middle', pointerEvents: 'none',
+                  style={{ fontSize: `${resultLabelFontSize}px`, fill: 'white', textAnchor: 'middle', pointerEvents: 'none',
                     paintOrder: 'stroke', stroke: '#1a1a2e', strokeWidth: '2px', strokeLinecap: 'round', strokeLinejoin: 'round' }}>
-                  {dept.name.length > 16 ? dept.name.substring(0, 16) + '…' : dept.name}
+                  {dept.name.length > 14 ? dept.name.substring(0, 14) + '…' : dept.name}
                 </text>
               ))}
             </ZoomableMap>

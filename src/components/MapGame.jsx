@@ -38,6 +38,7 @@ function MapGame({ provinceKey, onBack, onRoundEnd }) {
   const streakRef = useRef(0)
   const previousStreakRef = useRef(0)
   const mapRef = useRef(null)
+  const [mapSize, setMapSize] = useState({ w: 0, h: 0 })
   const provinceName = provinceData ? provinceData.name : getProvinceName(provinceKey)
 
   const initGame = useCallback((data, streak = 0) => {
@@ -70,6 +71,19 @@ function MapGame({ provinceKey, onBack, onRoundEnd }) {
     })
     return () => { cancelled = true }
   }, [provinceKey, initGame])
+
+  useEffect(() => {
+    const el = mapRef.current
+    if (!el) return
+    const update = () => {
+      const r = el.getBoundingClientRect()
+      setMapSize({ w: r.width, h: r.height })
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   const startNewRound = useCallback((currentStreak) => {
     if (!provinceData) return
@@ -216,6 +230,12 @@ function MapGame({ provinceKey, onBack, onRoundEnd }) {
   const currentDept = roundDepts[currentIndex]
   const progress = roundDepts.length > 0 ? ((currentIndex) / roundDepts.length) * 100 : 0
 
+  const mapVB = provinceData ? (provinceData.mainViewBox || provinceData.viewBox).split(' ').map(Number) : [0, 0, 540, 540]
+  const mapScale = mapSize.w > 0 && mapSize.h > 0 && mapVB[2] > 0 && mapVB[3] > 0
+    ? Math.min(mapSize.w / mapVB[2], mapSize.h / mapVB[3])
+    : 0.65
+  const labelFontSize = mapScale > 0 ? Math.max(8, Math.round(11 / mapScale)) : 12
+
   const handleLevelChange = (e) => {
     const newStreak = parseInt(e.target.value, 10)
     fireworks.stopLoop()
@@ -311,8 +331,8 @@ function MapGame({ provinceKey, onBack, onRoundEnd }) {
               />
             ))}
             {provinceData.departments.filter(d => !d.offshore && revealedNames[d.name]).map((dept) => (
-              <text key={`label-${dept.name}`} x={dept.cx} y={dept.cy} className="dept-label" style={{ fontSize: '7px' }}>
-                {dept.name.length > 16 ? dept.name.substring(0, 16) + '…' : dept.name}
+              <text key={`label-${dept.name}`} x={dept.cx} y={dept.cy} className="dept-label" style={{ fontSize: `${labelFontSize}px` }}>
+                {dept.name.length > 14 ? dept.name.substring(0, 14) + '…' : dept.name}
               </text>
             ))}
           </ZoomableMap>

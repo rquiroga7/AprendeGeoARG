@@ -7,9 +7,10 @@ to the SVG-path based format used by the AprendeGeoAR app.
 import json
 import os
 import math
+import heapq
 import urllib.request
 import sys
-from shapely.geometry import shape, Polygon, MultiPolygon
+from shapely.geometry import shape, Polygon, MultiPolygon, Point
 from shapely.ops import unary_union
 
 GEO_BASE = 'https://raw.githubusercontent.com/mgaitan/departamentos_argentina/master'
@@ -124,6 +125,103 @@ def polygon_centroid(rings):
     cy = sum(p[1] for p in ring) / len(ring)
     return cx, cy
 
+
+class _Cell:
+    """Grid cell used by the pole-of-inaccessibility search."""
+    __slots__ = ('x', 'y', 'h', 'd', 'max')
+
+    def __init__(self, x, y, h, polygon):
+        self.x = x
+        self.y = y
+        self.h = h
+        point = Point(x, y)
+        if polygon.contains(point):
+            self.d = point.distance(polygon.boundary)
+        else:
+            self.d = -point.distance(polygon.boundary)
+        # Furthest distance this cell could possibly contain (corner of cell)
+        self.max = self.d + h * math.sqrt(2)
+
+
+def _polylabel(polygon, tolerance=1.5):
+    """Find the pole of inaccessibility: the point inside a polygon that is
+    furthest from its boundary (best label anchor for concave shapes)."""
+    minx, miny, maxx, maxy = polygon.bounds
+    cell_size = min(maxx - minx, maxy - miny)
+    if cell_size <= 0:
+        rep = polygon.representative_point()
+        return rep.x, rep.y
+    h = cell_size / 2.0
+
+    queue = []
+    x = minx
+    while x < maxx:
+        y = miny
+        while y < maxy:
+            cell = _Cell(x + h, y + h, h, polygon)
+            heapq.heappush(queue, (-cell.max, cell))
+            y += cell_size
+        x += cell_size
+
+    best_cell = None
+    best_dist = 0.0
+
+    while queue:
+        _, cell = heapq.heappop(queue)
+        if cell.d > best_dist:
+            best_dist = cell.d
+            best_cell = cell
+        # No point in refining cells that can't beat the current best
+        if cell.max - best_dist <= tolerance:
+            continue
+        h = cell.h / 2.0
+        for dx, dy in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
+            child = _Cell(cell.x + dx * h, cell.y + dy * h, h, polygon)
+            heapq.heappush(queue, (-child.max, child))
+
+    return best_cell.x, best_cell.y
+
+
+def label_point_from_polygons(polygons):
+    """Compute a label anchor for a shape made of one or more polygons.
+
+    Uses the pole of inaccessibility of the largest polygon so the label
+    stays inside concave/irregular shapes (e.g. crescent-shaped Salta).
+    Falls back to Shapely's representative point, then to vertex centroid.
+    """
+    candidates = []
+    for rings in polygons:
+        if not rings or len(rings[0]) < 3:
+            continue
+        try:
+            exterior = rings[0]
+            interiors = [r for r in rings[1:] if len(r) >= 3]
+            poly = Polygon(exterior, interiors).buffer(0)
+            if not poly.is_empty and poly.area > 1e-6:
+                candidates.append(poly)
+        except Exception:
+            continue
+
+    if not candidates:
+        flat = [r for rings in polygons for r in rings]
+        return polygon_centroid(flat) if flat else (0, 0)
+
+    largest = max(candidates, key=lambda p: p.area)
+    try:
+        px, py = _polylabel(largest)
+        if largest.contains(Point(px, py)):
+            return px, py
+    except Exception:
+        pass
+    try:
+        rep = largest.representative_point()
+        if largest.contains(rep):
+            return rep.x, rep.y
+    except Exception:
+        pass
+    flat = [r for rings in polygons for r in rings]
+    return polygon_centroid(flat) if flat else (0, 0)
+
 def compute_viewbox(xs, ys, padding=60, min_size=500):
     min_x = min(xs) - padding
     max_x = max(xs) + padding
@@ -216,8 +314,10 @@ def process_province(prov_key, prov_name):
                 all_rings.append(polygon)
 
         projected_rings = []
+        projected_polygons = []
         for rings in all_rings:
             projected, _, _ = project_coords(rings, bounds)
+            projected_polygons.append(projected)
             projected_rings.extend(projected)
 
         # For offshore departments, clip projected coordinates south of the clip latitude
@@ -248,7 +348,7 @@ def process_province(prov_key, prov_name):
         if not path:
             continue
 
-        cx, cy = polygon_centroid(projected_rings)
+        cx, cy = label_point_from_polygons(projected_polygons)
 
         dept_entry = {
             'name': dep_name,
@@ -311,7 +411,7 @@ def process_province(prov_key, prov_name):
             # Build path (use all rings)
             malv_path = ''.join(ring_to_path(r) for r in malv_projected)
             if malv_path:
-                malv_cx, malv_cy = polygon_centroid(malv_projected)
+                malv_cx, malv_cy = label_point_from_polygons([[r] for r in malv_projected])
                 malv_dept = {
                     'name': 'Islas Malvinas',
                     'capital': '',
@@ -342,7 +442,7 @@ def process_province(prov_key, prov_name):
                 atl_path = ''.join(ring_to_path(r) for r in atl_projected)
                 if atl_path:
                     departments[atl_idx]['path'] = atl_path
-                    atl_cx, atl_cy = polygon_centroid(atl_projected)
+                    atl_cx, atl_cy = label_point_from_polygons([[r] for r in atl_projected])
                     departments[atl_idx]['cx'] = round(atl_cx, 1)
                     departments[atl_idx]['cy'] = round(atl_cy, 1)
                     # Recompute insetViewBox for Atlantico Sur
@@ -592,8 +692,10 @@ def process_national(out_dir):
                                        [list(ring.coords) for ring in poly.interiors])
 
         projected_rings = []
+        projected_polygons = []
         for rings in all_ring_groups:
             proj, _, _ = project_coords(rings, bounds)
+            projected_polygons.append(proj)
             projected_rings.extend(proj)
 
         path = ''.join(ring_to_path(r, precision=1) for r in projected_rings) if projected_rings else ''
@@ -606,7 +708,7 @@ def process_national(out_dir):
                 all_path_x.append(x)
                 all_path_y.append(y)
 
-        cx, cy = polygon_centroid(projected_rings)
+        cx, cy = label_point_from_polygons(projected_polygons)
         capital = PROVINCE_CAPITALS.get(prov_name, '')
         dept_name = smart_title(prov_name)
 
