@@ -1321,7 +1321,7 @@ body {
   pointer-events: none;
   font-weight: 700;
   paint-order: stroke;
-  stroke: rgba(0, 0, 0, 0.7);
+  stroke: #000;
   stroke-width: 2px;
   stroke-linecap: round;
   stroke-linejoin: round;
